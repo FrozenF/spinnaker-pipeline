@@ -1,0 +1,99 @@
+{
+  "name": "deploy-nginx",
+  "application": "nginx",
+  "keepWaitingPipelines": false,
+  "limitConcurrent": true,
+  "expectedArtifacts": [
+    {
+      "id": "nginx-configmap",
+      "displayName": "configmap.yaml",
+      "matchArtifact": { "type": "github/file", "name": "k8s/configmap.yaml" },
+      "defaultArtifact": {
+        "type": "github/file",
+        "name": "k8s/configmap.yaml",
+        "reference": "https://api.github.com/repos/myorg/nginx-spinnaker/contents/k8s/configmap.yaml",
+        "version": "main",
+        "artifactAccount": "my-github"
+      },
+      "useDefaultArtifact": true,
+      "usePriorArtifact": false
+    },
+    {
+      "id": "nginx-deployment",
+      "displayName": "deployment.yaml",
+      "matchArtifact": { "type": "github/file", "name": "k8s/deployment.yaml" },
+      "defaultArtifact": {
+        "type": "github/file",
+        "name": "k8s/deployment.yaml",
+        "reference": "https://api.github.com/repos/myorg/nginx-spinnaker/contents/k8s/deployment.yaml",
+        "version": "main",
+        "artifactAccount": "my-github"
+      },
+      "useDefaultArtifact": true,
+      "usePriorArtifact": false
+    },
+    {
+      "id": "nginx-service",
+      "displayName": "service.yaml",
+      "matchArtifact": { "type": "github/file", "name": "k8s/service.yaml" },
+      "defaultArtifact": {
+        "type": "github/file",
+        "name": "k8s/service.yaml",
+        "reference": "https://api.github.com/repos/myorg/nginx-spinnaker/contents/k8s/service.yaml",
+        "version": "main",
+        "artifactAccount": "my-github"
+      },
+      "useDefaultArtifact": true,
+      "usePriorArtifact": false
+    }
+  ],
+  "triggers": [
+    {
+      "type": "git",
+      "enabled": true,
+      "source": "github",
+      "project": "myorg",
+      "slug": "nginx-spinnaker",
+      "branch": "main",
+      "expectedArtifactIds": ["nginx-configmap", "nginx-deployment", "nginx-service"]
+    }
+  ],
+  "stages": [
+    {
+      "refId": "1",
+      "requisiteStageRefIds": [],
+      "type": "deployManifest",
+      "name": "Deploy ConfigMap",
+      "account": "k8s-staging",
+      "cloudProvider": "kubernetes",
+      "source": "artifact",
+      "manifestArtifactId": "nginx-configmap",
+      "moniker": { "app": "nginx" },
+      "skipExpressionEvaluation": true
+    },
+    {
+      "refId": "2",
+      "requisiteStageRefIds": ["1"],
+      "type": "deployManifest",
+      "name": "Deploy nginx",
+      "account": "k8s-staging",
+      "cloudProvider": "kubernetes",
+      "source": "artifact",
+      "manifestArtifactId": "nginx-deployment",
+      "moniker": { "app": "nginx" },
+      "skipExpressionEvaluation": true
+    },
+    {
+      "refId": "3",
+      "requisiteStageRefIds": ["2"],
+      "type": "deployManifest",
+      "name": "Deploy Service",
+      "account": "k8s-staging",
+      "cloudProvider": "kubernetes",
+      "source": "artifact",
+      "manifestArtifactId": "nginx-service",
+      "moniker": { "app": "nginx" },
+      "skipExpressionEvaluation": true
+    }
+  ]
+}
